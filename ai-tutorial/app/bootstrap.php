@@ -21,7 +21,10 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
-$config = require __DIR__ . '/Config/app.php';
+$config = [
+    'app' => require __DIR__ . '/Config/app.php',
+    'database' => require __DIR__ . '/Config/database.php',
+];
 $router = new Router();
 $app = new Application($config, $router);
 

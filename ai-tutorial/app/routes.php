@@ -43,8 +43,25 @@ $router->get('/logout', static function (): array {
     ];
 });
 
-$router->get('/dashboard', static function (Request $request) use ($render): string {
-    return $render('pages/dashboard', 'Dashboard', $request->path(), 'app');
+$router->get('/dashboard', function (Request $request, Application $app) use ($render): string {
+    $databaseStatus = [
+        'connected' => false,
+        'host' => $app->config('database.host'),
+        'port' => $app->config('database.port'),
+        'database' => $app->config('database.database'),
+        'message' => null,
+    ];
+
+    try {
+        $app->database();
+        $databaseStatus['connected'] = true;
+    } catch (\Throwable $throwable) {
+        $databaseStatus['message'] = $throwable->getMessage();
+    }
+
+    return $render('pages/dashboard', 'Dashboard', $request->path(), 'app', [
+        'databaseStatus' => $databaseStatus,
+    ]);
 });
 
 $router->get('/tasks', static function (Request $request) use ($render): string {

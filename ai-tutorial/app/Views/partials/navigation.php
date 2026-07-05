@@ -10,7 +10,7 @@ $items = [
 ?>
 <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-semibold" href="/dashboard"><?= htmlspecialchars($app->config('name') ?? 'AI Tutorial', ENT_QUOTES, 'UTF-8') ?></a>
+        <a class="navbar-brand fw-semibold" href="/dashboard"><?= htmlspecialchars($app->config('app.name') ?? 'AI Tutorial', ENT_QUOTES, 'UTF-8') ?></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>

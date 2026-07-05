@@ -2,6 +2,7 @@
 declare(strict_types=1);
 ?>
 <section class="mb-4">
+    <?php require dirname(__DIR__) . '/partials/database-status.php'; ?>
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
         <div>
             <span class="badge rounded-pill text-bg-primary-subtle text-primary-emphasis mb-2">Dashboard Placeholder</span>

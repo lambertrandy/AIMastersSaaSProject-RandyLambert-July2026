@@ -4,9 +4,12 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Http\Request;
+use PDO;
 
 final class Application
 {
+    private ?PDO $database = null;
+
     public function __construct(
         private readonly array $config,
         private readonly Router $router,
@@ -15,7 +18,37 @@ final class Application
 
     public function config(string $key, mixed $default = null): mixed
     {
-        return $this->config[$key] ?? $default;
+        $segments = explode('.', $key);
+        $value = $this->config;
+
+        foreach ($segments as $segment) {
+            if (! is_array($value) || ! array_key_exists($segment, $value)) {
+                return $default;
+            }
+
+            $value = $value[$segment];
+        }
+
+        return $value;
+    }
+
+    public function database(): PDO
+    {
+        if ($this->database instanceof PDO) {
+            return $this->database;
+        }
+
+        $this->database = Database::connect([
+            'driver' => (string) $this->config('database.driver', 'mysql'),
+            'host' => (string) $this->config('database.host', 'db'),
+            'port' => (int) $this->config('database.port', 3306),
+            'database' => (string) $this->config('database.database', 'ai_db'),
+            'username' => (string) $this->config('database.username', 'app_user'),
+            'password' => (string) $this->config('database.password', 'app_password'),
+            'charset' => (string) $this->config('database.charset', 'utf8mb4'),
+        ]);
+
+        return $this->database;
     }
 
     public function router(): Router

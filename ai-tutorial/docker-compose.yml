@@ -3,10 +3,17 @@ services:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
+    environment:
+      APP_DB_HOST: db
+      APP_DB_PORT: 3306
+      APP_DB_NAME: ai_db
+      APP_DB_USER: app_user
+      APP_DB_PASSWORD: app_password
     ports:
       - "80:80"
     volumes:
       - ./app:/var/www/app
+      - ./database:/var/www/database
       - ./www:/var/www/html
     depends_on:
       - db
