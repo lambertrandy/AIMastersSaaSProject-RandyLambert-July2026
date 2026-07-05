@@ -18,6 +18,7 @@ Build the initial PHP application scaffold for this project using the guidance i
 Requirements:
 
 - Build a simple server-rendered PHP 8.2 application that runs under Apache from the `www/` directory
+- Assume the app runs in Docker Compose and is served by Apache from `/var/www/html`
 - Create a clean folder structure for configuration, shared layout, authentication, tasks, and reusable partials
 - Add a front controller or routing approach suitable for a tutorial project
 - Create initial routes for `/`, `/login`, `/register`, `/logout`, `/dashboard`, `/tasks`, `/kanban`, and `/calendar`
@@ -40,6 +41,7 @@ Using `database-schema.md` and `project-spec.md`, implement the database connect
 Requirements:
 
 - Add a reusable MariaDB connection configuration using PHP PDO
+- Assume a containerized environment and configure the PHP app to connect to MariaDB using host `db`, port `3306`, database `ai_db`, username `app_user`, and password `app_password`
 - Create a SQL schema file for the `users` and `tasks` tables defined in `database-schema.md`
 - Ensure the schema includes indexes and the foreign key relationship
 - Add a simple database bootstrap/config approach appropriate for a tutorial app
@@ -50,7 +52,7 @@ Deliverables:
 
 - database connection code
 - schema SQL file
-- clear instructions in code comments or README-style note if needed for importing schema
+- clear instructions in code comments or README-style note if needed for importing schema through the Docker-based setup
 
 ## Prompt 3: Authentication System
 

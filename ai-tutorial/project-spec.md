@@ -11,6 +11,19 @@ This document defines the concrete implementation scope for version 1 of the to-
 - Backend stack: PHP 8.2, Apache, MariaDB
 - Deployment target for development: Docker Compose
 
+## Development Environment
+
+- Version 1 development should assume the application runs through `docker compose`
+- Apache serves the application from `/var/www/html`
+- Local project files are mounted into the web container from `./www`
+- Application database connections should use Docker service host `db`, not `localhost`
+- The default database target for application code is:
+- Host: `db`
+- Port: `3306`
+- Database: `ai_db`
+- Username: `app_user`
+- Password: `app_password`
+
 ## Version 1 Goal
 
 Build a simple, usable multi-user to-do application with:

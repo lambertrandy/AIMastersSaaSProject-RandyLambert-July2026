@@ -27,9 +27,17 @@ The backend runs in Docker using a LAMP-style stack defined in `docker-compose.y
 
 - Application files are mounted from `./www` to `/var/www/html`
 - Apache serves the PHP application from `/var/www/html`
+- PHP application code should connect to MariaDB using Docker service host `db`, not `localhost`
+- Default database connection target for application code:
+- Host: `db`
+- Port: `3306`
+- Database: `ai_db`
+- Username: `app_user`
+- Password: `app_password`
 - MariaDB is exposed on port `3306`
 - Apache is exposed on port `80`
 - Database name: `ai_db`
+- MariaDB data should persist through a named Docker volume
 
 ## Frontend Stack
 
@@ -64,6 +72,7 @@ When building this application, prefer:
 
 - PHP 8.2 with Apache for server-rendered pages and form handling
 - MariaDB for persistence
+- Docker Compose as the local development runtime
 - Bootstrap-based layouts and components
 - HTMX for CRUD interactions such as creating, editing, completing, and deleting tasks
 - Alpine.js only for small client-side interactions
