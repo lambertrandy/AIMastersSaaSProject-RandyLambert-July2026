@@ -1,0 +1,7 @@
+body {
+    min-height: 100vh;
+}
+
+.calendar-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}

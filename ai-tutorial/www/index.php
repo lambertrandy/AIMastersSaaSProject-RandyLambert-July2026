@@ -1,15 +1,5 @@
 <?php
 declare(strict_types=1);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Tutorial</title>
-</head>
-<body>
-  <h1>AI Tutorial</h1>
-  <p>PHP Apache container is running.</p>
-</body>
-</html>
+
+$app = require dirname(__DIR__) . '/app/bootstrap.php';
+$app->run();

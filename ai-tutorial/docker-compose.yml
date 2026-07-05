@@ -1,9 +1,12 @@
 services:
   web:
-    image: php:8.2-apache
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
     ports:
       - "80:80"
     volumes:
+      - ./app:/var/www/app
       - ./www:/var/www/html
     depends_on:
       - db
