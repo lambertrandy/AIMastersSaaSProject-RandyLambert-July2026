@@ -13,6 +13,7 @@ declare(strict_types=1);
 <body class="bg-body-tertiary">
     <main class="py-5">
         <div class="container">
+            <?php require dirname(__DIR__) . '/partials/flash-messages.php'; ?>
             <?= $content ?>
         </div>
     </main>

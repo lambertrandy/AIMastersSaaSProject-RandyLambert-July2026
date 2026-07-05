@@ -7,6 +7,7 @@ $items = [
     '/kanban' => 'Kanban',
     '/calendar' => 'Calendar',
 ];
+$currentUser = $app->currentUser();
 ?>
 <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
     <div class="container">
@@ -24,10 +25,19 @@ $items = [
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="/login">Login</a>
-                <a class="btn btn-primary btn-sm" href="/register">Register</a>
-            </div>
+            <?php if ($app->isAuthenticated() && is_array($currentUser)): ?>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="small text-secondary">Signed in as <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <form method="post" action="/logout" class="mb-0">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Logout</button>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="/login">Login</a>
+                    <a class="btn btn-primary btn-sm" href="/register">Register</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </nav>

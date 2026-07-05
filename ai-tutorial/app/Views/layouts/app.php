@@ -14,6 +14,7 @@ declare(strict_types=1);
     <?php require dirname(__DIR__) . '/partials/navigation.php'; ?>
     <main class="py-4">
         <div class="container">
+            <?php require dirname(__DIR__) . '/partials/flash-messages.php'; ?>
             <?= $content ?>
         </div>
     </main>

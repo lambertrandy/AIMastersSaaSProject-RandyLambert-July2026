@@ -29,4 +29,20 @@ final class Request
     {
         return $this->path;
     }
+
+    public function input(string $key, mixed $default = null): mixed
+    {
+        return $_POST[$key] ?? $_GET[$key] ?? $default;
+    }
+
+    public function only(array $keys): array
+    {
+        $values = [];
+
+        foreach ($keys as $key) {
+            $values[$key] = $this->input($key);
+        }
+
+        return $values;
+    }
 }

@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Http\Request;
+use App\Repositories\UserRepository;
 use PDO;
 
 final class Application
 {
     private ?PDO $database = null;
+    private ?array $currentUser = null;
 
     public function __construct(
         private readonly array $config,
@@ -54,6 +56,35 @@ final class Application
     public function router(): Router
     {
         return $this->router;
+    }
+
+    public function users(): UserRepository
+    {
+        return new UserRepository($this->database());
+    }
+
+    public function isAuthenticated(): bool
+    {
+        return Auth::check();
+    }
+
+    public function currentUser(): ?array
+    {
+        if (! $this->isAuthenticated()) {
+            return null;
+        }
+
+        if ($this->currentUser !== null) {
+            return $this->currentUser;
+        }
+
+        $this->currentUser = $this->users()->findById(Auth::id() ?? 0);
+
+        if ($this->currentUser === null) {
+            Auth::logout();
+        }
+
+        return $this->currentUser;
     }
 
     public function run(): void
