@@ -449,12 +449,60 @@ $router->get('/kanban', static function (Request $request, Application $app) use
     ]);
 });
 
-$router->get('/calendar', static function (Request $request) use ($render, $authRedirect): string|array {
+$router->get('/calendar', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
     $response = $authRedirect();
 
     if ($response !== null) {
         return $response;
     }
 
-    return $render('pages/calendar', 'Calendar', $request->path(), 'app');
+    $requestedMonth = (string) $request->input('month', date('Y-m'));
+    $monthDate = \DateTimeImmutable::createFromFormat('Y-m-d', $requestedMonth . '-01');
+    if (! $monthDate || $monthDate->format('Y-m') !== $requestedMonth) {
+        $monthDate = new \DateTimeImmutable('first day of this month');
+    }
+
+    $monthKey = $monthDate->format('Y-m');
+    $monthTasks = $app->tasks()->tasksForMonth(Auth::id() ?? 0, $monthKey);
+    $tasksByDate = [];
+    foreach ($monthTasks as $task) {
+        $tasksByDate[$task['due_date']][] = $task;
+    }
+
+    $selectedDate = (string) $request->input('date', $monthDate->format('Y-m-d'));
+    $selectedDateObject = \DateTimeImmutable::createFromFormat('Y-m-d', $selectedDate);
+    if (! $selectedDateObject || $selectedDateObject->format('Y-m') !== $monthKey) {
+        $selectedDate = $monthDate->format('Y-m-d');
+        $selectedDateObject = $monthDate;
+    }
+
+    $selectedDateTasks = $app->tasks()->tasksForDay(Auth::id() ?? 0, $selectedDate);
+
+    $calendarStart = $monthDate->modify('-' . ((int) $monthDate->format('N') - 1) . ' days');
+    $calendarEnd = $monthDate->modify('last day of this month');
+    $calendarEnd = $calendarEnd->modify('+' . (7 - (int) $calendarEnd->format('N')) . ' days');
+
+    $calendarDays = [];
+    for ($day = $calendarStart; $day < $calendarEnd; $day = $day->modify('+1 day')) {
+        $dateKey = $day->format('Y-m-d');
+        $calendarDays[] = [
+            'date' => $dateKey,
+            'day' => $day->format('j'),
+            'isCurrentMonth' => $day->format('Y-m') === $monthKey,
+            'isToday' => $dateKey === date('Y-m-d'),
+            'isSelected' => $dateKey === $selectedDate,
+            'tasks' => $tasksByDate[$dateKey] ?? [],
+        ];
+    }
+
+    return $render('pages/calendar', 'Calendar', $request->path(), 'app', [
+        'monthLabel' => $monthDate->format('F Y'),
+        'monthKey' => $monthKey,
+        'previousMonth' => $monthDate->modify('-1 month')->format('Y-m'),
+        'nextMonth' => $monthDate->modify('+1 month')->format('Y-m'),
+        'calendarDays' => $calendarDays,
+        'selectedDate' => $selectedDate,
+        'selectedDateLabel' => $selectedDateObject->format('F j, Y'),
+        'selectedDateTasks' => $selectedDateTasks,
+    ]);
 });

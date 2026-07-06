@@ -3,5 +3,23 @@ body {
 }
 
 .calendar-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    display: grid;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.calendar-day {
+    min-height: 150px;
+}
+
+@media (max-width: 991.98px) {
+    .calendar-grid,
+    .calendar-weekdays {
+        min-width: 840px;
+    }
 }

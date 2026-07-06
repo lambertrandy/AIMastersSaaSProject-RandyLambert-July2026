@@ -143,6 +143,51 @@ final class TaskRepository
         return $grouped;
     }
 
+    public function tasksForMonth(int $userId, string $month): array
+    {
+        $start = $month . '-01';
+        $end = date('Y-m-t', strtotime($start));
+
+        $statement = $this->database->prepare(
+            'SELECT * FROM tasks
+             WHERE user_id = :user_id
+               AND due_date IS NOT NULL
+               AND due_date BETWEEN :start_date AND :end_date
+             ORDER BY due_date ASC, created_at DESC'
+        );
+        $statement->execute([
+            'user_id' => $userId,
+            'start_date' => $start,
+            'end_date' => $end,
+        ]);
+
+        return $statement->fetchAll();
+    }
+
+    public function tasksForDay(int $userId, string $date): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT * FROM tasks
+             WHERE user_id = :user_id
+               AND due_date = :due_date
+             ORDER BY
+                CASE priority
+                    WHEN "urgent" THEN 1
+                    WHEN "high" THEN 2
+                    WHEN "medium" THEN 3
+                    WHEN "low" THEN 4
+                    ELSE 5
+                END,
+                created_at DESC'
+        );
+        $statement->execute([
+            'user_id' => $userId,
+            'due_date' => $date,
+        ]);
+
+        return $statement->fetchAll();
+    }
+
     public function dueTodayForUser(int $userId, int $limit = 5): array
     {
         return $this->tasksForDateCondition(
