@@ -63,6 +63,15 @@ $taskInput = static function (Request $request): array {
     ];
 };
 
+$taskListFilters = static function (Request $request): array {
+    return [
+        'status' => (string) $request->input('status', 'all'),
+        'priority' => (string) $request->input('priority', 'all'),
+        'due_state' => (string) $request->input('due_state', 'all'),
+        'sort' => (string) $request->input('sort', 'created_desc'),
+    ];
+};
+
 $validateTask = static function (array $task): array {
     $errors = [];
     $allowedStatuses = ['todo', 'in_progress', 'done'];
@@ -266,15 +275,18 @@ $router->get('/dashboard', function (Request $request, Application $app) use ($r
     ]);
 });
 
-$router->get('/tasks', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
+$router->get('/tasks', static function (Request $request, Application $app) use ($render, $authRedirect, $taskListFilters): string|array {
     $response = $authRedirect();
 
     if ($response !== null) {
         return $response;
     }
 
+    $filters = $taskListFilters($request);
+
     return $render('pages/tasks/index', 'Tasks', $request->path(), 'app', [
-        'tasks' => $app->tasks()->allForUser(Auth::id() ?? 0),
+        'tasks' => $app->tasks()->filteredForUser(Auth::id() ?? 0, $filters),
+        'filters' => $filters,
     ]);
 });
 

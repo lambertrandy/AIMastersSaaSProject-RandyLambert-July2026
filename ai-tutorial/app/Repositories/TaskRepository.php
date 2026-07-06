@@ -22,6 +22,58 @@ final class TaskRepository
         return $statement->fetchAll();
     }
 
+    public function filteredForUser(int $userId, array $filters = []): array
+    {
+        $allowedStatuses = ['todo', 'in_progress', 'done'];
+        $allowedPriorities = ['low', 'medium', 'high', 'urgent'];
+        $allowedSorts = [
+            'created_desc' => 'created_at DESC',
+            'created_asc' => 'created_at ASC',
+            'due_asc' => 'due_date ASC, created_at DESC',
+            'due_desc' => 'due_date DESC, created_at DESC',
+            'priority_asc' => 'FIELD(priority, "low", "medium", "high", "urgent") ASC, created_at DESC',
+            'priority_desc' => 'FIELD(priority, "urgent", "high", "medium", "low") ASC, created_at DESC',
+        ];
+
+        $whereParts = ['user_id = :user_id'];
+        $parameters = ['user_id' => $userId];
+
+        $status = $filters['status'] ?? 'all';
+        if (in_array($status, $allowedStatuses, true)) {
+            $whereParts[] = 'status = :status';
+            $parameters['status'] = $status;
+        }
+
+        $priority = $filters['priority'] ?? 'all';
+        if (in_array($priority, $allowedPriorities, true)) {
+            $whereParts[] = 'priority = :priority';
+            $parameters['priority'] = $priority;
+        }
+
+        $dueState = $filters['due_state'] ?? 'all';
+        $today = date('Y-m-d');
+        if ($dueState === 'today') {
+            $whereParts[] = 'due_date = :due_today';
+            $parameters['due_today'] = $today;
+        } elseif ($dueState === 'upcoming') {
+            $whereParts[] = 'due_date > :due_upcoming';
+            $parameters['due_upcoming'] = $today;
+        } elseif ($dueState === 'overdue') {
+            $whereParts[] = 'due_date IS NOT NULL AND due_date < :due_overdue AND status <> "done"';
+            $parameters['due_overdue'] = $today;
+        }
+
+        $sort = $filters['sort'] ?? 'created_desc';
+        $orderBy = $allowedSorts[$sort] ?? $allowedSorts['created_desc'];
+
+        $statement = $this->database->prepare(
+            'SELECT * FROM tasks WHERE ' . implode(' AND ', $whereParts) . ' ORDER BY ' . $orderBy
+        );
+        $statement->execute($parameters);
+
+        return $statement->fetchAll();
+    }
+
     public function dashboardSummary(int $userId): array
     {
         $today = date('Y-m-d');
