@@ -249,8 +249,20 @@ $router->get('/dashboard', function (Request $request, Application $app) use ($r
         $databaseStatus['message'] = $throwable->getMessage();
     }
 
+    $userId = Auth::id() ?? 0;
+    $summary = $app->tasks()->dashboardSummary($userId);
+    $dueTodayTasks = $app->tasks()->dueTodayForUser($userId);
+    $upcomingTasks = $app->tasks()->upcomingForUser($userId);
+    $overdueTasks = $app->tasks()->overdueForUser($userId);
+    $recentlyCompletedTasks = $app->tasks()->recentlyCompletedForUser($userId);
+
     return $render('pages/dashboard', 'Dashboard', $request->path(), 'app', [
         'databaseStatus' => $databaseStatus,
+        'summary' => $summary,
+        'dueTodayTasks' => $dueTodayTasks,
+        'upcomingTasks' => $upcomingTasks,
+        'overdueTasks' => $overdueTasks,
+        'recentlyCompletedTasks' => $recentlyCompletedTasks,
     ]);
 });
 
