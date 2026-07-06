@@ -105,6 +105,44 @@ final class TaskRepository
         ];
     }
 
+    public function groupedByStatusForUser(int $userId): array
+    {
+        $statement = $this->database->prepare(
+            'SELECT * FROM tasks
+             WHERE user_id = :user_id
+             ORDER BY
+                FIELD(status, "todo", "in_progress", "done"),
+                CASE priority
+                    WHEN "urgent" THEN 1
+                    WHEN "high" THEN 2
+                    WHEN "medium" THEN 3
+                    WHEN "low" THEN 4
+                    ELSE 5
+                END,
+                due_date IS NULL,
+                due_date ASC,
+                created_at DESC'
+        );
+        $statement->execute(['user_id' => $userId]);
+
+        $grouped = [
+            'todo' => [],
+            'in_progress' => [],
+            'done' => [],
+        ];
+
+        foreach ($statement->fetchAll() as $task) {
+            $status = $task['status'] ?? 'todo';
+            if (! array_key_exists($status, $grouped)) {
+                continue;
+            }
+
+            $grouped[$status][] = $task;
+        }
+
+        return $grouped;
+    }
+
     public function dueTodayForUser(int $userId, int $limit = 5): array
     {
         return $this->tasksForDateCondition(
@@ -240,6 +278,27 @@ final class TaskRepository
             'user_id' => $userId,
             'status' => 'done',
             'completed_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ]);
+    }
+
+    public function updateStatus(int $taskId, int $userId, string $status): void
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $completedAt = $status === 'done' ? $timestamp : null;
+
+        $statement = $this->database->prepare(
+            'UPDATE tasks
+             SET status = :status,
+                 completed_at = :completed_at,
+                 updated_at = :updated_at
+             WHERE id = :id AND user_id = :user_id'
+        );
+        $statement->execute([
+            'id' => $taskId,
+            'user_id' => $userId,
+            'status' => $status,
+            'completed_at' => $completedAt,
             'updated_at' => $timestamp,
         ]);
     }

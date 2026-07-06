@@ -99,6 +99,8 @@ $validateTask = static function (array $task): array {
     return $errors;
 };
 
+$validTaskStatuses = ['todo', 'in_progress', 'done'];
+
 $router->get('/', static function () use ($redirect): array {
     if (Auth::check()) {
         return $redirect('/dashboard');
@@ -133,9 +135,8 @@ $router->post('/login', static function (Request $request, Application $app) use
         $errors['password'] = 'Password is required.';
     }
 
-    Session::flash('old', ['email' => $email]);
-
     if ($errors !== []) {
+        Session::flash('old', ['email' => $email]);
         Session::flash('errors', $errors);
 
         return $redirect('/login');
@@ -195,16 +196,15 @@ $router->post('/register', static function (Request $request, Application $app) 
         $errors['password_confirmation'] = 'Password confirmation does not match.';
     }
 
-    Session::flash('old', [
-        'name' => $name,
-        'email' => $email,
-    ]);
-
     if ($errors === [] && $app->users()->findByEmail($email) !== null) {
         $errors['email'] = 'That email address is already registered.';
     }
 
     if ($errors !== []) {
+        Session::flash('old', [
+            'name' => $name,
+            'email' => $email,
+        ]);
         Session::flash('errors', $errors);
 
         return $redirect('/register');
@@ -308,9 +308,8 @@ $router->post('/tasks/create', static function (Request $request, Application $a
     $task = $taskInput($request);
     $errors = $validateTask($task);
 
-    Session::flash('old', $task);
-
     if ($errors !== []) {
+        Session::flash('old', $task);
         Session::flash('errors', $errors);
         return $redirect('/tasks/create');
     }
@@ -375,9 +374,8 @@ $router->post('/tasks/{id}/edit', static function (Request $request, Application
     $task['completed_at'] = $existingTask['completed_at'];
     $errors = $validateTask($task);
 
-    Session::flash('old', $task);
-
     if ($errors !== []) {
+        Session::flash('old', $task);
         Session::flash('errors', $errors);
         return $redirect('/tasks/' . $taskId . '/edit');
     }
@@ -418,14 +416,37 @@ $router->post('/tasks/{id}/delete', static function (Request $request, Applicati
     return $redirect('/tasks');
 });
 
-$router->get('/kanban', static function (Request $request) use ($render, $authRedirect): string|array {
+$router->post('/tasks/{id}/status', static function (Request $request, Application $app) use ($redirect, $validTaskStatuses): array {
+    $taskId = (int) $request->route('id');
+    $task = $app->tasks()->findForUser($taskId, Auth::id() ?? 0);
+
+    if ($task === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/kanban');
+    }
+
+    $status = (string) $request->input('status', '');
+    if (! in_array($status, $validTaskStatuses, true)) {
+        Session::flash('error', 'Invalid status selection.');
+        return $redirect('/kanban');
+    }
+
+    $app->tasks()->updateStatus($taskId, Auth::id() ?? 0, $status);
+    Session::flash('success', 'Task status updated.');
+
+    return $redirect('/kanban');
+});
+
+$router->get('/kanban', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
     $response = $authRedirect();
 
     if ($response !== null) {
         return $response;
     }
 
-    return $render('pages/kanban', 'Kanban Board', $request->path(), 'app');
+    return $render('pages/kanban', 'Kanban Board', $request->path(), 'app', [
+        'columns' => $app->tasks()->groupedByStatusForUser(Auth::id() ?? 0),
+    ]);
 });
 
 $router->get('/calendar', static function (Request $request) use ($render, $authRedirect): string|array {
