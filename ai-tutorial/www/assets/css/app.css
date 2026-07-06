@@ -1,5 +1,77 @@
+:root {
+    --app-bg: #f4f1e8;
+    --app-surface: rgba(255, 255, 255, 0.88);
+    --app-border: rgba(96, 82, 57, 0.14);
+    --app-ink: #2d2419;
+    --app-muted: #6b6258;
+    --app-accent: #0f766e;
+    --app-accent-soft: #d9f3ef;
+}
+
 body {
     min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 26%),
+        linear-gradient(180deg, #fbf8f2 0%, var(--app-bg) 100%);
+    color: var(--app-ink);
+}
+
+.app-shell {
+    color: var(--app-ink);
+}
+
+.app-main-container {
+    max-width: 1180px;
+}
+
+.app-navbar {
+    background: rgba(255, 251, 245, 0.88);
+    backdrop-filter: blur(12px);
+    border-color: var(--app-border) !important;
+}
+
+.app-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, var(--app-accent), #155e75);
+    color: #fff;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+}
+
+.app-nav-pills .nav-link {
+    border-radius: 999px;
+    color: var(--app-muted);
+    padding-inline: 0.9rem;
+}
+
+.app-nav-pills .nav-link.active,
+.app-nav-pills .nav-link:hover {
+    background: var(--app-accent-soft);
+    color: var(--app-accent);
+}
+
+.app-user-chip {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.65);
+}
+
+.app-surface,
+.card,
+.alert {
+    border-color: var(--app-border) !important;
+    background: var(--app-surface);
+    backdrop-filter: blur(8px);
+}
+
+.app-alert .btn-close {
+    font-size: 0.8rem;
 }
 
 .calendar-grid {
@@ -15,6 +87,14 @@ body {
 
 .calendar-day {
     min-height: 150px;
+}
+
+.badge.text-bg-light {
+    background: rgba(255, 255, 255, 0.86) !important;
+}
+
+.table > :not(caption) > * > * {
+    background: transparent;
 }
 
 @media (max-width: 991.98px) {
