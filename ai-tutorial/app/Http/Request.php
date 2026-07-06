@@ -5,6 +5,8 @@ namespace App\Http;
 
 final class Request
 {
+    private array $routeParameters = [];
+
     public function __construct(
         private readonly string $method,
         private readonly string $path,
@@ -44,5 +46,15 @@ final class Request
         }
 
         return $values;
+    }
+
+    public function setRouteParameters(array $parameters): void
+    {
+        $this->routeParameters = $parameters;
+    }
+
+    public function route(string $key, mixed $default = null): mixed
+    {
+        return $this->routeParameters[$key] ?? $default;
     }
 }

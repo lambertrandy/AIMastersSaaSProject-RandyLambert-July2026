@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Http\Request;
+use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
 use PDO;
 
@@ -61,6 +62,11 @@ final class Application
     public function users(): UserRepository
     {
         return new UserRepository($this->database());
+    }
+
+    public function tasks(): TaskRepository
+    {
+        return new TaskRepository($this->database());
     }
 
     public function isAuthenticated(): bool

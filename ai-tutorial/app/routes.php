@@ -53,6 +53,43 @@ $guestRedirect = static function (): ?array {
     return null;
 };
 
+$taskInput = static function (Request $request): array {
+    return [
+        'title' => trim((string) $request->input('title', '')),
+        'description' => trim((string) $request->input('description', '')),
+        'status' => (string) $request->input('status', 'todo'),
+        'priority' => (string) $request->input('priority', 'medium'),
+        'due_date' => trim((string) $request->input('due_date', '')),
+    ];
+};
+
+$validateTask = static function (array $task): array {
+    $errors = [];
+    $allowedStatuses = ['todo', 'in_progress', 'done'];
+    $allowedPriorities = ['low', 'medium', 'high', 'urgent'];
+
+    if ($task['title'] === '') {
+        $errors['title'] = 'Title is required.';
+    }
+
+    if (! in_array($task['status'], $allowedStatuses, true)) {
+        $errors['status'] = 'Choose a valid status.';
+    }
+
+    if (! in_array($task['priority'], $allowedPriorities, true)) {
+        $errors['priority'] = 'Choose a valid priority.';
+    }
+
+    if ($task['due_date'] !== '') {
+        $date = \DateTime::createFromFormat('Y-m-d', $task['due_date']);
+        if (! $date || $date->format('Y-m-d') !== $task['due_date']) {
+            $errors['due_date'] = 'Enter a valid due date.';
+        }
+    }
+
+    return $errors;
+};
+
 $router->get('/', static function () use ($redirect): array {
     if (Auth::check()) {
         return $redirect('/dashboard');
@@ -217,14 +254,144 @@ $router->get('/dashboard', function (Request $request, Application $app) use ($r
     ]);
 });
 
-$router->get('/tasks', static function (Request $request) use ($render, $authRedirect): string|array {
+$router->get('/tasks', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
     $response = $authRedirect();
 
     if ($response !== null) {
         return $response;
     }
 
-    return $render('pages/tasks/index', 'Tasks', $request->path(), 'app');
+    return $render('pages/tasks/index', 'Tasks', $request->path(), 'app', [
+        'tasks' => $app->tasks()->allForUser(Auth::id() ?? 0),
+    ]);
+});
+
+$router->get('/tasks/create', static function (Request $request) use ($render, $authRedirect): string|array {
+    $response = $authRedirect();
+
+    if ($response !== null) {
+        return $response;
+    }
+
+    return $render('pages/tasks/create', 'Create Task', $request->path(), 'app', [
+        'task' => Session::pull('old', []),
+        'errors' => Session::pull('errors', []),
+        'submitLabel' => 'Create Task',
+    ]);
+});
+
+$router->post('/tasks/create', static function (Request $request, Application $app) use ($redirect, $taskInput, $validateTask): array {
+    $task = $taskInput($request);
+    $errors = $validateTask($task);
+
+    Session::flash('old', $task);
+
+    if ($errors !== []) {
+        Session::flash('errors', $errors);
+        return $redirect('/tasks/create');
+    }
+
+    $taskId = $app->tasks()->create(Auth::id() ?? 0, $task);
+    Session::flash('success', 'Task created successfully.');
+
+    return $redirect('/tasks/' . $taskId);
+});
+
+$router->get('/tasks/{id}', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
+    $response = $authRedirect();
+
+    if ($response !== null) {
+        return $response;
+    }
+
+    $task = $app->tasks()->findForUser((int) $request->route('id'), Auth::id() ?? 0);
+
+    if ($task === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/tasks');
+    }
+
+    return $render('pages/tasks/show', 'Task Detail', $request->path(), 'app', [
+        'task' => $task,
+    ]);
+});
+
+$router->get('/tasks/{id}/edit', static function (Request $request, Application $app) use ($render, $authRedirect): string|array {
+    $response = $authRedirect();
+
+    if ($response !== null) {
+        return $response;
+    }
+
+    $task = Session::pull('old');
+    $storedTask = $app->tasks()->findForUser((int) $request->route('id'), Auth::id() ?? 0);
+
+    if ($storedTask === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/tasks');
+    }
+
+    return $render('pages/tasks/edit', 'Edit Task', $request->path(), 'app', [
+        'task' => is_array($task) && $task !== [] ? array_merge($storedTask, $task) : $storedTask,
+        'errors' => Session::pull('errors', []),
+        'submitLabel' => 'Save Changes',
+    ]);
+});
+
+$router->post('/tasks/{id}/edit', static function (Request $request, Application $app) use ($redirect, $taskInput, $validateTask): array {
+    $taskId = (int) $request->route('id');
+    $existingTask = $app->tasks()->findForUser($taskId, Auth::id() ?? 0);
+
+    if ($existingTask === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/tasks');
+    }
+
+    $task = $taskInput($request);
+    $task['completed_at'] = $existingTask['completed_at'];
+    $errors = $validateTask($task);
+
+    Session::flash('old', $task);
+
+    if ($errors !== []) {
+        Session::flash('errors', $errors);
+        return $redirect('/tasks/' . $taskId . '/edit');
+    }
+
+    $app->tasks()->update($taskId, Auth::id() ?? 0, $task);
+    Session::flash('success', 'Task updated successfully.');
+
+    return $redirect('/tasks/' . $taskId);
+});
+
+$router->post('/tasks/{id}/complete', static function (Request $request, Application $app) use ($redirect): array {
+    $taskId = (int) $request->route('id');
+    $task = $app->tasks()->findForUser($taskId, Auth::id() ?? 0);
+
+    if ($task === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/tasks');
+    }
+
+    $app->tasks()->markComplete($taskId, Auth::id() ?? 0);
+    Session::flash('success', 'Task marked complete.');
+
+    return $redirect('/tasks/' . $taskId);
+});
+
+$router->post('/tasks/{id}/delete', static function (Request $request, Application $app) use ($redirect): array {
+    $taskId = (int) $request->route('id');
+    $task = $app->tasks()->findForUser($taskId, Auth::id() ?? 0);
+
+    if ($task === null) {
+        Session::flash('error', 'Task not found.');
+        return $redirect('/tasks');
+    }
+
+    $app->tasks()->delete($taskId, Auth::id() ?? 0);
+    Session::flash('success', 'Task deleted successfully.');
+
+    return $redirect('/tasks');
 });
 
 $router->get('/kanban', static function (Request $request) use ($render, $authRedirect): string|array {
