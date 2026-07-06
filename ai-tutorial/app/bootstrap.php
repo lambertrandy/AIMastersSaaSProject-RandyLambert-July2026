@@ -25,6 +25,9 @@ $config = [
     'app' => require __DIR__ . '/Config/app.php',
     'database' => require __DIR__ . '/Config/database.php',
 ];
+
+date_default_timezone_set($config['app']['timezone'] ?? 'UTC');
+
 $router = new Router();
 $app = new Application($config, $router);
 

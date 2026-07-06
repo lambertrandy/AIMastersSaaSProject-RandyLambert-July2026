@@ -4,4 +4,5 @@ declare(strict_types=1);
 return [
     'name' => 'AI Tutorial',
     'base_url' => '/',
+    'timezone' => 'America/Toronto',
 ];

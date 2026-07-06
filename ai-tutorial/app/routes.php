@@ -275,21 +275,6 @@ $router->get('/dashboard', function (Request $request, Application $app) use ($r
     ]);
 });
 
-$router->get('/tasks', static function (Request $request, Application $app) use ($render, $authRedirect, $taskListFilters): string|array {
-    $response = $authRedirect();
-
-    if ($response !== null) {
-        return $response;
-    }
-
-    $filters = $taskListFilters($request);
-
-    return $render('pages/tasks/index', 'Tasks', $request->path(), 'app', [
-        'tasks' => $app->tasks()->filteredForUser(Auth::id() ?? 0, $filters),
-        'filters' => $filters,
-    ]);
-});
-
 $router->get('/tasks/create', static function (Request $request) use ($render, $authRedirect): string|array {
     $response = $authRedirect();
 
@@ -398,6 +383,21 @@ $router->post('/tasks/{id}/complete', static function (Request $request, Applica
     $app->tasks()->markComplete($taskId, Auth::id() ?? 0);
     Session::flash('success', 'Task marked complete.');
 
+    if ($request->isHtmx()) {
+        return [
+            'status' => 200,
+            'headers' => [],
+            'body' => View::partial('partials/task-table', [
+                'tasks' => $app->tasks()->filteredForUser(Auth::id() ?? 0, [
+                    'status' => (string) $request->input('status_filter', 'all'),
+                    'priority' => (string) $request->input('priority_filter', 'all'),
+                    'due_state' => (string) $request->input('due_state_filter', 'all'),
+                    'sort' => (string) $request->input('sort_filter', 'created_desc'),
+                ]),
+            ]),
+        ];
+    }
+
     return $redirect('/tasks/' . $taskId);
 });
 
@@ -412,6 +412,21 @@ $router->post('/tasks/{id}/delete', static function (Request $request, Applicati
 
     $app->tasks()->delete($taskId, Auth::id() ?? 0);
     Session::flash('success', 'Task deleted successfully.');
+
+    if ($request->isHtmx()) {
+        return [
+            'status' => 200,
+            'headers' => [],
+            'body' => View::partial('partials/task-table', [
+                'tasks' => $app->tasks()->filteredForUser(Auth::id() ?? 0, [
+                    'status' => (string) $request->input('status_filter', 'all'),
+                    'priority' => (string) $request->input('priority_filter', 'all'),
+                    'due_state' => (string) $request->input('due_state_filter', 'all'),
+                    'sort' => (string) $request->input('sort_filter', 'created_desc'),
+                ]),
+            ]),
+        ];
+    }
 
     return $redirect('/tasks');
 });
@@ -434,6 +449,16 @@ $router->post('/tasks/{id}/status', static function (Request $request, Applicati
     $app->tasks()->updateStatus($taskId, Auth::id() ?? 0, $status);
     Session::flash('success', 'Task status updated.');
 
+    if ($request->isHtmx()) {
+        return [
+            'status' => 200,
+            'headers' => [],
+            'body' => View::partial('partials/kanban-board', [
+                'columns' => $app->tasks()->groupedByStatusForUser(Auth::id() ?? 0),
+            ]),
+        ];
+    }
+
     return $redirect('/kanban');
 });
 
@@ -446,6 +471,32 @@ $router->get('/kanban', static function (Request $request, Application $app) use
 
     return $render('pages/kanban', 'Kanban Board', $request->path(), 'app', [
         'columns' => $app->tasks()->groupedByStatusForUser(Auth::id() ?? 0),
+    ]);
+});
+
+$router->get('/tasks', static function (Request $request, Application $app) use ($render, $authRedirect, $taskListFilters): string|array {
+    $response = $authRedirect();
+
+    if ($response !== null) {
+        return $response;
+    }
+
+    $filters = $taskListFilters($request);
+    $tasks = $app->tasks()->filteredForUser(Auth::id() ?? 0, $filters);
+
+    if ($request->isHtmx()) {
+        return [
+            'status' => 200,
+            'headers' => [],
+            'body' => View::partial('partials/task-table', [
+                'tasks' => $tasks,
+            ]),
+        ];
+    }
+
+    return $render('pages/tasks/index', 'Tasks', $request->path(), 'app', [
+        'tasks' => $tasks,
+        'filters' => $filters,
     ]);
 });
 

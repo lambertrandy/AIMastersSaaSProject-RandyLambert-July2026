@@ -57,4 +57,16 @@ final class Request
     {
         return $this->routeParameters[$key] ?? $default;
     }
+
+    public function header(string $key, mixed $default = null): mixed
+    {
+        $serverKey = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
+
+        return $_SERVER[$serverKey] ?? $default;
+    }
+
+    public function isHtmx(): bool
+    {
+        return $this->header('HX-Request') === 'true';
+    }
 }
