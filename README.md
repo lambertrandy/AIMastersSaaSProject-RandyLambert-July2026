@@ -155,6 +155,14 @@ Those documents were used to break the build into scoped milestones and reduce a
 
 ## Running The Project
 
+Create your local environment file before starting Docker:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set local database credentials. Do not commit `.env`.
+
 Start the containers:
 
 ```bash
@@ -164,7 +172,7 @@ sudo docker compose up --build -d
 Import the schema:
 
 ```bash
-sudo docker compose exec -T db mariadb -uapp_user -papp_password ai_db < database/schema.sql
+sudo docker compose exec -T db sh -c 'mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' < database/schema.sql
 ```
 
 Open the app:
@@ -182,7 +190,7 @@ Important defaults:
 - DB host inside the app: `db`
 - DB name: `ai_db`
 - DB user: `app_user`
-- DB password: `app_password`
+- DB password: loaded from local `.env` as `APP_DB_PASSWORD`
 - app timezone: `America/Toronto`
 
 MariaDB data is stored in a named Docker volume for persistence.
@@ -222,13 +230,13 @@ sudo docker compose logs
 Inspect tables:
 
 ```bash
-sudo docker compose exec db mariadb -uapp_user -papp_password -e "USE ai_db; SHOW TABLES;"
+sudo docker compose exec db sh -c 'mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "USE $MYSQL_DATABASE; SHOW TABLES;"'
 ```
 
 Inspect task data:
 
 ```bash
-sudo docker compose exec db mariadb -uapp_user -papp_password -e "USE ai_db; SELECT id, title, status, priority, due_date FROM tasks ORDER BY id;"
+sudo docker compose exec db sh -c 'mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "USE $MYSQL_DATABASE; SELECT id, title, status, priority, due_date FROM tasks ORDER BY id;"'
 ```
 
 ## What This Project Demonstrates

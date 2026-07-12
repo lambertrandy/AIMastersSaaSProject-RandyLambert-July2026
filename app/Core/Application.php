@@ -46,8 +46,8 @@ final class Application
             'host' => (string) $this->config('database.host', 'db'),
             'port' => (int) $this->config('database.port', 3306),
             'database' => (string) $this->config('database.database', 'ai_db'),
-            'username' => (string) $this->config('database.username', 'app_user'),
-            'password' => (string) $this->config('database.password', 'app_password'),
+            'username' => (string) $this->config('database.username', ''),
+            'password' => (string) $this->config('database.password', ''),
             'charset' => (string) $this->config('database.charset', 'utf8mb4'),
         ]);
 

@@ -1,6 +1,6 @@
 # Database Setup
 
-This project uses MariaDB in Docker Compose.
+This project uses MariaDB in Docker Compose. Database credentials are loaded from the local `.env` file, which is intentionally ignored by Git.
 
 ## Connection Defaults
 
@@ -8,7 +8,7 @@ This project uses MariaDB in Docker Compose.
 - Port: `3306`
 - Database: `ai_db`
 - Username: `app_user`
-- Password: `app_password`
+- Password: loaded from local `.env` as `APP_DB_PASSWORD`
 
 These values are passed into the PHP container through `docker-compose.yml` and are also the defaults in `app/Config/database.php`.
 
@@ -17,13 +17,13 @@ These values are passed into the PHP container through `docker-compose.yml` and 
 Run this from the project root after the containers are up:
 
 ```bash
-sudo docker compose exec -T db mariadb -uapp_user -papp_password ai_db < database/schema.sql
+sudo docker compose exec -T db sh -c 'mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' < database/schema.sql
 ```
 
 ## Verify The Tables
 
 ```bash
-sudo docker compose exec db mariadb -uapp_user -papp_password -e "USE ai_db; SHOW TABLES;"
+sudo docker compose exec db sh -c 'mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "USE $MYSQL_DATABASE; SHOW TABLES;"'
 ```
 
 ## Notes

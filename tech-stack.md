@@ -33,7 +33,7 @@ The backend runs in Docker using a LAMP-style stack defined in `docker-compose.y
 - Port: `3306`
 - Database: `ai_db`
 - Username: `app_user`
-- Password: `app_password`
+- Password: loaded from local `.env`
 - MariaDB is exposed on port `3306`
 - Apache is exposed on port `80`
 - Database name: `ai_db`

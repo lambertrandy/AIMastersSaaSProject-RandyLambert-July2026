@@ -41,7 +41,7 @@ Using `database-schema.md` and `project-spec.md`, implement the database connect
 Requirements:
 
 - Add a reusable MariaDB connection configuration using PHP PDO
-- Assume a containerized environment and configure the PHP app to connect to MariaDB using host `db`, port `3306`, database `ai_db`, username `app_user`, and password `app_password`
+- Assume a containerized environment and configure the PHP app to connect to MariaDB using host `db`, port `3306`, database `ai_db`, username and password from environment variables
 - Create a SQL schema file for the `users` and `tasks` tables defined in `database-schema.md`
 - Ensure the schema includes indexes and the foreign key relationship
 - Add a simple database bootstrap/config approach appropriate for a tutorial app

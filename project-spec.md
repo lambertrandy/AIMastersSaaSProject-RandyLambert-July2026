@@ -22,7 +22,7 @@ This document defines the concrete implementation scope for version 1 of the to-
 - Port: `3306`
 - Database: `ai_db`
 - Username: `app_user`
-- Password: `app_password`
+- Password: loaded from local `.env`
 
 ## Version 1 Goal
 
