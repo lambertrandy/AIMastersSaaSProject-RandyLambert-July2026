@@ -98,12 +98,34 @@ final class Application
         $request = Request::capture();
         $response = $this->router->dispatch($request, $this);
 
-        http_response_code($response['status']);
+        $status = filter_var($response['status'] ?? 200, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 100, 'max_range' => 599],
+        ]);
+        http_response_code($status === false ? 500 : $status);
 
-        foreach ($response['headers'] as $name => $value) {
-            header($name . ': ' . $value);
+        $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
+        $headers = array_merge([
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'DENY',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Content-Security-Policy' => "default-src 'self'; script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+        ], $headers);
+
+        foreach ($headers as $name => $value) {
+            $this->sendHeader((string) $name, (string) $value);
         }
 
-        echo $response['body'];
+        echo (string) ($response['body'] ?? '');
+    }
+
+    private function sendHeader(string $name, string $value): void
+    {
+        if (! preg_match('/^[A-Za-z0-9-]+$/', $name)) {
+            return;
+        }
+
+        $cleanValue = preg_replace('/[\r\n]+/', '', $value) ?? '';
+        header($name . ': ' . $cleanValue);
     }
 }

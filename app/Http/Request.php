@@ -61,8 +61,13 @@ final class Request
     public function header(string $key, mixed $default = null): mixed
     {
         $serverKey = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
+        $value = $_SERVER[$serverKey] ?? $default;
 
-        return $_SERVER[$serverKey] ?? $default;
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        return substr(preg_replace('/[\x00-\x1F\x7F]/', '', $value) ?? '', 0, 1024);
     }
 
     public function isHtmx(): bool
